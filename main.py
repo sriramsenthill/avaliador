@@ -3,31 +3,16 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)
 
 import sys
-from src.graph import build_graph
+from src.service import run_evaluation
 
-def run_evaluation(arxiv_url: str):
+def run_cli(arxiv_url: str):
     print(f"\n🔬 Starting evaluation for: {arxiv_url}\n")
-    app = build_graph()
-
-    initial_state = {
-        "arxiv_url": arxiv_url,
-        "raw_text": "", "title": "", "sections": {},
-        "consistency_score": 0, "consistency_notes": "",
-        "grammar_rating": "", "grammar_notes": "",
-        "novelty_index": "", "novelty_notes": "",
-        "fact_check_log": [], "accuracy_score": 0.0,
-        "accuracy_notes": "", "final_report": "", "error": None,
-    }
-
     print("⏳ Running pipeline... (this takes 30-60 seconds)\n")
 
-    # Stream with live node progress
-    final_state = initial_state.copy()
-    for step in app.stream(initial_state):
-        node_name = list(step.keys())[0]
-        node_data = step[node_name]
-        final_state.update(node_data)
+    def on_step(node_name: str, _node_data: dict, _state: dict) -> None:
         print(f"  ✅ Completed: {node_name}")
+
+    final_state = run_evaluation(arxiv_url, on_step=on_step)
 
     print("\n" + "=" * 60)
 
@@ -58,4 +43,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python main.py <arxiv_url>")
         sys.exit(1)
-    run_evaluation(sys.argv[1])
+    run_cli(sys.argv[1])

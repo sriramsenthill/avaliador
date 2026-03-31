@@ -7,6 +7,7 @@ from src.agents.grammar import grammar_node
 from src.agents.novelty import novelty_node
 from src.agents.fact_checker import fact_check_node
 from src.agents.accuracy import accuracy_node
+from src.agents.executive_summary import executive_summary_node
 from src.agents.reporter import reporter_node
 
 
@@ -40,6 +41,7 @@ def build_graph() -> StateGraph:
     graph.add_node("novelty", novelty_node)
     graph.add_node("fact_checker", fact_check_node)
     graph.add_node("accuracy", accuracy_node)
+    graph.add_node("executive_summary", executive_summary_node)
     graph.add_node("reporter", reporter_node)
 
     # Entry point
@@ -52,13 +54,19 @@ def build_graph() -> StateGraph:
         {"continue": "decomposer", "end": END},
     )
 
-    # Linear pipeline
+    # Specialist fan-out / fan-in pipeline
     graph.add_edge("decomposer", "consistency")
-    graph.add_edge("consistency", "grammar")
-    graph.add_edge("grammar", "novelty")
-    graph.add_edge("novelty", "fact_checker")
+    graph.add_edge("decomposer", "grammar")
+    graph.add_edge("decomposer", "novelty")
+    graph.add_edge("decomposer", "fact_checker")
+
+    graph.add_edge("consistency", "accuracy")
+    graph.add_edge("grammar", "accuracy")
+    graph.add_edge("novelty", "accuracy")
     graph.add_edge("fact_checker", "accuracy")
-    graph.add_edge("accuracy", "reporter")
+
+    graph.add_edge("accuracy", "executive_summary")
+    graph.add_edge("executive_summary", "reporter")
     graph.add_edge("reporter", END)
 
     return graph.compile()
