@@ -2,12 +2,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)
 
-import json
 import streamlit as st
-from src.service import DISPLAY_ORDER, NODE_LABELS, run_evaluation
+from src.service import DISPLAY_ORDER, NODE_LABELS, run_evaluation, save_evaluation_report
 
 st.set_page_config(
-    page_title="ArXiv Paper Evaluator",
+    page_title="Avaliador",
     page_icon="🔬",
     layout="wide",
 )
@@ -488,11 +487,11 @@ st.markdown(
     <div class="masthead">
         <div class="masthead-left">
             <div class="masthead-kicker">LangGraph · Agentic Pipeline · v2</div>
-            <h1 class="masthead-title">ArXiv Paper<br><em>Evaluator</em></h1>
+            <h1 class="masthead-title">Avaliador</h1>
             <p class="masthead-desc">
-                A reviewer-style audit pipeline. Papers are scraped, decomposed, evaluated
-                by specialist agents, grounded against related literature, and synthesised
-                into a board-level judgement report.
+                An agentic arXiv paper evaluator. Papers are scraped, decomposed,
+                evaluated by specialist agents, grounded against related literature,
+                and synthesised into a board-level judgement report.
             </p>
         </div>
         <div class="masthead-badge">
@@ -607,9 +606,21 @@ if submitted and arxiv_url:
     if final_state.get("error"):
         st.error(f"Evaluation failed: {final_state['error']}")
     else:
+        saved_report_path = None
+        save_error = None
+        try:
+            saved_report_path = save_evaluation_report(final_state)
+        except Exception as exc:
+            save_error = str(exc)
+
         verdict     = final_state.get("overall_verdict", "REVISE")
         verdict_cls = verdict.lower()
         verdict_labels = {"PASS": "✓ PASS", "REVISE": "◑ REVISE", "FAIL": "✕ FAIL"}
+
+        if saved_report_path:
+            st.success(f"Report saved locally: `{saved_report_path}`")
+        elif save_error:
+            st.warning(f"Evaluation completed, but local save failed: {save_error}")
 
         # ── Verdict card ──────────────────────────────────────────
         st.markdown(
@@ -706,19 +717,11 @@ if submitted and arxiv_url:
             report = final_state.get("final_report", "")
             if report:
                 st.markdown(report)
-                dl1, dl2 = st.columns(2)
-                dl1.download_button(
+                st.download_button(
                     label="↓ Markdown Report",
                     data=report,
                     file_name="judgement_report.md",
                     mime="text/markdown",
-                    use_container_width=True,
-                )
-                dl2.download_button(
-                    label="↓ JSON Payload",
-                    data=json.dumps(final_state, indent=2),
-                    file_name="evaluation_payload.json",
-                    mime="application/json",
                     use_container_width=True,
                 )
             else:

@@ -1,4 +1,7 @@
 from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
+import re
 from typing import Callable
 
 from src.graph import build_graph
@@ -75,3 +78,36 @@ def run_evaluation(
             on_step(node_name, node_data, deepcopy(final_state))
 
     return final_state
+
+
+def _slugify(value: str) -> str:
+    normalized = re.sub(r"[^A-Za-z0-9]+", "-", value.strip().lower())
+    return normalized.strip("-") or "paper"
+
+
+def _extract_arxiv_id(arxiv_url: str) -> str:
+    match = re.search(r"arxiv\.org/(?:abs|pdf)/([^/?#]+)", arxiv_url)
+    if not match:
+        return "paper"
+    raw_id = match.group(1).replace(".pdf", "")
+    normalized_id = re.sub(r"[^A-Za-z0-9._-]+", "-", raw_id)
+    return normalized_id.strip("-") or "paper"
+
+
+def save_evaluation_report(final_state: dict, output_root: str | Path = "outputs") -> str:
+    report = final_state.get("final_report", "").strip()
+    if not report:
+        raise ValueError("Cannot save report because the final report is empty.")
+
+    root = Path(output_root)
+    root.mkdir(parents=True, exist_ok=True)
+
+    arxiv_id = _extract_arxiv_id(final_state.get("arxiv_url", ""))
+    title_slug = _slugify(final_state.get("title", "paper"))
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stem = f"{arxiv_id}_{title_slug}_{timestamp}"
+
+    report_path = (root / f"{stem}_evaluation_report.md").resolve()
+
+    report_path.write_text(report + "\n", encoding="utf-8")
+    return str(report_path)

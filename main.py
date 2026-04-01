@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)
 
 import sys
-from src.service import run_evaluation
+from src.service import run_evaluation, save_evaluation_report
 
 def run_cli(arxiv_url: str):
     print(f"\n🔬 Starting evaluation for: {arxiv_url}\n")
@@ -30,9 +30,8 @@ def run_cli(arxiv_url: str):
     report = final_state.get("final_report", "")
     if report:
         print(report)
-        with open("judgement_report.md", "w") as f:
-            f.write(report)
-        print(f"\n✅ Report saved to judgement_report.md")
+        report_path = save_evaluation_report(final_state)
+        print(f"\n✅ Report saved to {report_path}")
     else:
         print("⚠️  Reporter returned empty. Raw state dump:")
         for k, v in final_state.items():

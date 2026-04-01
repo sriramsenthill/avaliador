@@ -39,31 +39,54 @@ def reporter_node(state: PaperState) -> dict:
     """Compile all agent outputs into a deterministic Markdown report."""
     evaluated_on = datetime.now().strftime("%Y-%m-%d %H:%M")
     verdict = state.get("overall_verdict", "REVISE").upper()
+    pass_fail_recommendation = "PASS" if verdict == "PASS" else "FAIL"
     verdict_badge = {
         "PASS": "✅ PASS",
         "REVISE": "🟡 REVISE",
         "FAIL": "❌ FAIL",
     }.get(verdict, verdict)
 
-    report = f"""# Peer Review Judgement Report
+    report = f"""# Evaluation Report
 
-## Executive Snapshot
+## Executive Summary
 
 **Paper Title:** {state['title']}
 **Evaluated On:** {evaluated_on}
+**Pass/Fail Recommendation:** {pass_fail_recommendation}
 **Overall Verdict:** {verdict_badge}
 **Reviewer Confidence:** {state.get('reviewer_confidence', 'Medium')}
 
 {state.get('executive_summary', 'No executive summary was generated.')}
 
-## Scorecard
+## Detailed Scores
 
-| Category | Result | Analyst Notes |
-|---|---|---|
-| Consistency | {state.get('consistency_score', 0)}/100 | {_escape_pipes(state.get('consistency_notes', ''))} |
-| Grammar & Language | {state.get('grammar_rating', 'N/A')} | {_escape_pipes(state.get('grammar_notes', ''))} |
-| Novelty | {state.get('novelty_index', 'N/A')} | {_escape_pipes(state.get('novelty_notes', ''))} |
-| Fabrication Probability | {state.get('accuracy_score', 0.0):.1f}% | {_escape_pipes(state.get('accuracy_notes', ''))} |
+### Consistency Score
+
+**Score:** {state.get('consistency_score', 0)}/100
+
+{state.get('consistency_notes', 'No consistency notes were generated.')}
+
+### Grammar Rating
+
+**Rating:** {state.get('grammar_rating', 'N/A')}
+
+{state.get('grammar_notes', 'No grammar notes were generated.')}
+
+### Novelty Index
+
+**Assessment:** {state.get('novelty_index', 'N/A')}
+
+{state.get('novelty_notes', 'No novelty notes were generated.')}
+
+### Fact Check Log
+
+{_fact_check_table(state.get('fact_check_log', []))}
+
+### Accuracy/Fabrication Score
+
+**Risk Assessment:** {state.get('accuracy_score', 0.0):.1f}%
+
+{state.get('accuracy_notes', 'No fabrication-risk notes were generated.')}
 
 ## Specialist Strengths
 
@@ -76,10 +99,6 @@ def reporter_node(state: PaperState) -> dict:
 ## Related Work Grounding
 
 {_related_work_table(state.get('novelty_search_results', []))}
-
-## Fact Check Log
-
-{_fact_check_table(state.get('fact_check_log', []))}
 
 ## Recommendations For Authors
 
