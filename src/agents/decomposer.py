@@ -1,3 +1,5 @@
+"""Section extractor that turns the scraped paper text into reviewer-friendly slices."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm
@@ -8,7 +10,6 @@ def decomposer_node(state: PaperState) -> dict:
     """Break paper text into logical sections."""
     llm = get_llm()
 
-    # Send only first 10k chars to stay within 16k token limit
     text_snippet = state["raw_text"][:10000]
 
     prompt = f"""You are a research paper parser.
@@ -28,13 +29,13 @@ Return ONLY valid JSON. No markdown fences, no explanation."""
     response = llm.invoke([HumanMessage(content=prompt)])
     content = response.content.strip()
 
-    # Strip markdown code fences if present
     content = re.sub(r"^```(?:json)?\n?", "", content)
     content = re.sub(r"\n?```$", "", content)
 
     try:
         sections = json.loads(content)
     except json.JSONDecodeError:
+        # Keep the pipeline moving even when the model returns malformed JSON.
         sections = {
             "abstract": state["raw_text"][:1000],
             "methodology": "",

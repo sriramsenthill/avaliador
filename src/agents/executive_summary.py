@@ -1,3 +1,5 @@
+"""Lead-reviewer node that turns specialist outputs into the final editorial verdict."""
+
 from __future__ import annotations
 
 import json
@@ -105,4 +107,5 @@ Return ONLY valid JSON with this schema:
             "recommendations": payload.get("recommendations", []),
         }
     except Exception:
+        # Fall back to a deterministic verdict so report generation never depends on a perfect JSON response.
         return _fallback_summary(state)

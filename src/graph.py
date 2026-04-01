@@ -1,3 +1,5 @@
+"""LangGraph pipeline definition for the end-to-end paper evaluation workflow."""
+
 from langgraph.graph import StateGraph, END
 from src.state import PaperState
 from src.scraper import scrape_arxiv_paper
@@ -33,7 +35,6 @@ def should_stop(state: PaperState) -> str:
 def build_graph() -> StateGraph:
     graph = StateGraph(PaperState)
 
-    # Register nodes
     graph.add_node("scraper", scraper_node)
     graph.add_node("decomposer", decomposer_node)
     graph.add_node("consistency", consistency_node)
@@ -44,22 +45,21 @@ def build_graph() -> StateGraph:
     graph.add_node("executive_summary", executive_summary_node)
     graph.add_node("reporter", reporter_node)
 
-    # Entry point
     graph.set_entry_point("scraper")
 
-    # Conditional: stop on scrape error
     graph.add_conditional_edges(
         "scraper",
         should_stop,
         {"continue": "decomposer", "end": END},
     )
 
-    # Specialist fan-out / fan-in pipeline
+    # These four reviewers run from the same decomposed paper state and converge in `accuracy`.
     graph.add_edge("decomposer", "consistency")
     graph.add_edge("decomposer", "grammar")
     graph.add_edge("decomposer", "novelty")
     graph.add_edge("decomposer", "fact_checker")
 
+    # `accuracy` acts as the fan-in stage that scores the paper after specialist outputs are available.
     graph.add_edge("consistency", "accuracy")
     graph.add_edge("grammar", "accuracy")
     graph.add_edge("novelty", "accuracy")

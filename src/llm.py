@@ -1,3 +1,5 @@
+"""Central LLM factory so every agent uses the same provider and model configuration."""
+
 import os
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv

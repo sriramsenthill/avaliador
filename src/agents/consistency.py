@@ -1,3 +1,5 @@
+"""Reviewer node that compares methods and results for internal scientific consistency."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm

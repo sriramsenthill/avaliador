@@ -1,3 +1,5 @@
+"""Streamlit entrypoint for running the evaluation pipeline from the browser."""
+
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)
@@ -503,7 +505,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.title("Review Board")
 for node in DISPLAY_ORDER:
     st.sidebar.markdown(f"**{NODE_LABELS[node]}**")
@@ -512,7 +513,6 @@ st.sidebar.caption(
     "then a meta-reviewer and deterministic reporter assemble the final judgement packet."
 )
 
-# ── Example papers ────────────────────────────────────────────────────────────
 example_papers = {
     "Mamba":                     "https://arxiv.org/abs/2312.00752",
     "Attention Is All You Need": "https://arxiv.org/abs/1706.03762",
@@ -528,7 +528,6 @@ for col, (label, url) in zip(sample_cols, example_papers.items()):
     if col.button(label, use_container_width=True):
         st.session_state.example_url = url
 
-# ── Input form ────────────────────────────────────────────────────────────────
 with st.form("evaluation_form"):
     arxiv_url = st.text_input(
         "arXiv paper URL",
@@ -543,7 +542,6 @@ with st.form("evaluation_form"):
     )
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 def render_timeline_html(completed_nodes: list[str]) -> str:
     rows = []
     for node in DISPLAY_ORDER:
@@ -577,7 +575,6 @@ def render_related_work(results: list[dict]) -> None:
             st.write(summary or "No summary available.")
 
 
-# ── Run ───────────────────────────────────────────────────────────────────────
 if submitted and arxiv_url:
     progress_bar = st.progress(0)
     status_col, timeline_col = st.columns([2, 1])
@@ -622,7 +619,6 @@ if submitted and arxiv_url:
         elif save_error:
             st.warning(f"Evaluation completed, but local save failed: {save_error}")
 
-        # ── Verdict card ──────────────────────────────────────────
         st.markdown(
             f"""
             <div class="verdict-card {verdict_cls}">
@@ -637,14 +633,12 @@ if submitted and arxiv_url:
             unsafe_allow_html=True,
         )
 
-        # ── Metrics row ───────────────────────────────────────────
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Consistency",     f"{final_state.get('consistency_score', 0)}/100")
         m2.metric("Grammar",          final_state.get("grammar_rating", "N/A"))
         m3.metric("Novelty",          final_state.get("novelty_index", "N/A"))
         m4.metric("Fabrication Risk", f"{final_state.get('accuracy_score', 0.0):.1f}%")
 
-        # ── Tabs ──────────────────────────────────────────────────
         overview_tab, analysts_tab, evidence_tab, report_tab = st.tabs(
             ["Overview", "Analyst Board", "Evidence", "Report"]
         )

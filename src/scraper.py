@@ -1,3 +1,5 @@
+"""Paper ingestion utilities that normalize arXiv URLs into title and source text."""
+
 import re
 import requests
 from bs4 import BeautifulSoup
@@ -25,30 +27,26 @@ def scrape_arxiv_paper(url: str) -> dict:
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Extract title
     title_tag = soup.find("h1", class_="title")
     title = title_tag.get_text(strip=True).replace("Title:", "").strip() if title_tag else "Unknown Title"
 
-    # Extract abstract
     abstract_tag = soup.find("blockquote", class_="abstract")
     abstract = abstract_tag.get_text(strip=True).replace("Abstract:", "").strip() if abstract_tag else ""
 
-    # Try to get full paper text via HTML version
     html_url = f"https://arxiv.org/html/{arxiv_id}"
-    full_text = abstract  # fallback
+    # The abstract remains the minimum viable input when the HTML rendition is unavailable.
+    full_text = abstract
 
     try:
         html_resp = requests.get(html_url, timeout=20)
         if html_resp.status_code == 200:
             paper_soup = BeautifulSoup(html_resp.text, "html.parser")
-            # Remove scripts, styles, nav
             for tag in paper_soup(["script", "style", "nav", "header", "footer"]):
                 tag.decompose()
             full_text = paper_soup.get_text(separator="\n", strip=True)
     except Exception:
-        pass  # Fall back to abstract only
+        pass
 
-    # Truncate to ~12k tokens worth of characters (~48k chars) to stay safe
     MAX_CHARS = 40000
     if len(full_text) > MAX_CHARS:
         full_text = full_text[:MAX_CHARS] + "\n\n[... truncated for token limit ...]"

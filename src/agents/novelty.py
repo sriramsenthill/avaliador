@@ -1,3 +1,5 @@
+"""Reviewer node that combines the paper abstract with retrieved arXiv neighbors."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm

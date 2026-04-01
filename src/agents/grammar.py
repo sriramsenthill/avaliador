@@ -1,3 +1,5 @@
+"""Reviewer node that scores language quality from representative paper sections."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm

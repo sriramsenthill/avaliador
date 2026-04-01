@@ -1,3 +1,5 @@
+"""arXiv API helpers used by the novelty reviewer to ground its assessment in related work."""
+
 from __future__ import annotations
 
 import re
@@ -104,6 +106,7 @@ def search_related_work(title: str, abstract: str, limit: int = 5) -> list[dict]
         except Exception:
             continue
 
+    # Ranking by title overlap keeps the results lightweight and deterministic without another model call.
     deduped = _dedupe_by_title(candidates, seed_title=title)
     ranked = sorted(
         deduped,

@@ -1,3 +1,5 @@
+"""Deterministic report composer that converts graph state into the final Markdown deliverable."""
+
 from src.state import PaperState
 from datetime import datetime
 

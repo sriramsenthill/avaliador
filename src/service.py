@@ -1,3 +1,5 @@
+"""Shared orchestration helpers used by both the UI and CLI entrypoints."""
+
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -44,6 +46,7 @@ DISPLAY_ORDER = [
     "reporter",
 ]
 
+# These names are reused by the UI progress timeline, so they should stay aligned with graph node ids.
 NODE_LABELS = {
     "scraper": "Paper Ingestion",
     "decomposer": "Section Decomposition",
@@ -105,6 +108,7 @@ def save_evaluation_report(final_state: dict, output_root: str | Path = "outputs
     arxiv_id = _extract_arxiv_id(final_state.get("arxiv_url", ""))
     title_slug = _slugify(final_state.get("title", "paper"))
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Include arXiv id, title slug, and timestamp so repeated runs stay traceable without collisions.
     stem = f"{arxiv_id}_{title_slug}_{timestamp}"
 
     report_path = (root / f"{stem}_evaluation_report.md").resolve()

@@ -1,3 +1,5 @@
+"""CLI entrypoint that runs the same pipeline as the Streamlit UI."""
+
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=True)

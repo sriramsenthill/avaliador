@@ -1,3 +1,5 @@
+"""Reviewer node that turns prior reviewer signals into a fabrication-risk score."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm
@@ -8,7 +10,6 @@ def accuracy_node(state: PaperState) -> dict:
     """Calculate fabrication probability based on anomalies and logical leaps."""
     llm = get_llm()
 
-    # Summarize previous findings for context
     fact_summary = "\n".join(
         f"- [{f['status'].upper()}] {f['claim']}: {f['note']}"
         for f in state.get("fact_check_log", [])[:6]

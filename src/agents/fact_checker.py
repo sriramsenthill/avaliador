@@ -1,3 +1,5 @@
+"""Reviewer node that extracts structured claim-level checks from the paper body."""
+
 from langchain_core.messages import HumanMessage
 from src.state import PaperState
 from src.llm import get_llm
